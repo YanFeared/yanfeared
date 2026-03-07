@@ -8,6 +8,10 @@ local run = function(func)
 	func()
 end
 local function downloadFile(path, func)
+	local downloader = getgenv().catdownloader
+	if downloader then
+		downloader.Text = `Downloading {path}`
+	end
 	if not isfile(path) then
 		local suc, res = pcall(function()
 			return game:HttpGet('https://raw.githubusercontent.com/MaxlaserTech/CatV6/'..readfile('catrewrite/profiles/commit.txt')..'/'..select(1, path:gsub('catrewrite/', '')), true)
@@ -19,6 +23,9 @@ local function downloadFile(path, func)
 			res = '\n'..res
 		end
 		writefile(path, res)
+	end
+	if downloader then
+		downloader.Text = ``
 	end
 	return (func or readfile)(path)
 end
@@ -8354,8 +8361,9 @@ run(function()
 	local Duration
 
 	PromptDuration = vape.Categories.Utility:CreateModule({
-		Name = 'Prompt Duration',
-		Tooltip = 'Changes duration of proximity prompts',
+		Name = 'Fast interaction',
+		Tags = {'new'},
+		Tooltip = 'Changes how fast ur interacting',
 		Function = function(call)
 			if call then
 				PromptDuration:Clean(proximityPromptService.PromptButtonHoldBegan:Connect(function(prompt, player)
@@ -8376,6 +8384,52 @@ run(function()
 			return val > 1 and 'secs' or 'sec'
 		end,
 		Decimal = 100
+	})
+end)
+
+run(function()
+	local PromptExtender
+	local Extend
+
+	local Reference = {}
+	local function Added(v)
+		if v:IsA(`ProximityPrompt`) then
+			Reference[v] = v.MaxActivationDistance
+			v.MaxActivationDistance = v.MaxActivationDistance + Extend.Value
+			PromptExtender:Clean(v:GetPropertyChangedSignal('MaxActivationDistance'):Connect(function()
+				Reference[v] = v.MaxActivationDistance
+				v.MaxActivationDistance = v.MaxActivationDistance + Extend.Value
+			end))
+		end
+	end
+
+	PromptExtender = vape.Categories.Utility:CreateModule({
+		Name = 'Interact Extender',
+		Tooltip = 'Allows you to interact with stuff further',
+		Tags = {'new'},
+		Function = function(callback)
+			if callback then
+				PromptExtender:Clean(workspace.DescendantAdded:Connect(Added))
+				for _, v in workspace:QueryDescendants('ProximityPrompt') do
+					task.spawn(Added, v)
+				end
+			else
+				for ent, value in Reference do
+					ent.MaxActivationDistance = value
+					Reference[ent] = nil
+				end
+			end
+		end
+	})
+	Extend = PromptExtender:CreateSlider({
+		Name = 'Extra activation range',
+		Min = 0,
+		Max = 10,
+		Default = 5,
+		Decimal = 10,
+		Suffix = function(val)
+			return val <= 1 and 'stud' or 'studs'
+		end
 	})
 end)
 

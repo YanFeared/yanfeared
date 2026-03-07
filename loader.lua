@@ -6,6 +6,7 @@ end
 local Args = ...
 local commit = Args.Commit
 shared.VapeDeveloper = shared.VapeDeveloper or Args.Developer
+warn(commit)
 
 local isfile = isfile or function(file)
 	local suc, res = pcall(function()
@@ -30,8 +31,6 @@ downloader.Font = Enum.Font.Arimo
 downloader.Parent = gethui and gethui() or cloneref(game:GetService('Players')).LocalPlayer:WaitForChild('PlayerGui', 9e9)
 getgenv().catdownloader = downloader
 
-print('yo')
-
 local function downloadFile(path, func)
 	if not isfile(path) then
 		if path ~= 'catrewrite/main.lua' then
@@ -53,19 +52,14 @@ local function downloadFile(path, func)
 	return (func or readfile)(path)
 end
 
-warn('pmo')
 
 local function wipeFolder(path)
 	if isfolder(path) then
-		print('Wiping', path)
 		for _, v in listfiles(path) do
 			if isfile(v) and not v:find('/profiles') then
-				warn('Deleting', v)
 				delfile(v)
-				print('Deleted', v)
 			end
 		end
-		print('Wiped', path)
 	end
 end
 

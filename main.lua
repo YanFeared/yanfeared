@@ -1,13 +1,11 @@
 local license = ...
 repeat task.wait() until game:IsLoaded()
 if shared.vape then shared.vape:Uninject() end
-print(shared.VapeDeveloper)
 
 if identifyexecutor then
-	if table.find({'Argon', 'Wave', 'Seliware', 'Volt'}, ({identifyexecutor()})[1]) then
-		print('thanks bro')
+	if table.find({'Wave', 'Seliware', 'Volt', 'Nihon', 'Synapse Z'}, ({identifyexecutor()})[1]) then
 		getgenv().setthreadidentity = nil
-	end
+	end -- might aswell just blacklist every executor atp
 end
 
 local vape
@@ -31,37 +29,12 @@ end
 local playersService = cloneref(game:GetService('Players'))
 local httpService = cloneref(game:GetService('HttpService'))
 
-if false then 
-	local body = httpService:JSONEncode({
-		nonce = httpService:GenerateGUID(false),
-		args = {
-			invite = {code = 'catvape'},
-			code = 'catvape'
-		},
-		cmd = 'INVITE_BROWSER'
-	})
-
-	for i = 1, 2 do
-		task.spawn(pcall, function()
-			request({
-				Method = 'POST',
-				Url = 'http://127.0.0.1:6463/rpc?v=1',
-				Headers = {
-					['Content-Type'] = 'application/json',
-					Origin = 'https://discord.com'
-				},
-				Body = body
-			})
-		end)
-	end
-	setclipboard([[loadstring(game:HttpGet('https://raw.githubusercontent.com/MaxlaserTech/CatV6/main/init.lua'), 'init.lua')({})]])
-	playersService.LocalPlayer:Kick('discord.gg/vxpe, Your using an outdated loader of catvape\nYou may be getting ip logged. Please change ur loader now') 
-end
-
 local function downloadFile(path, func)
-	warn(path)
+	local downloader = getgenv().catdownloader
+	if downloader then
+		downloader.Text = `Downloading {path}`
+	end
 	if not isfile(path) then
-		print('broo')
 		local suc, res = pcall(function()
 			return game:HttpGet('https://raw.githubusercontent.com/MaxlaserTech/CatV6/'..readfile('catrewrite/profiles/commit.txt')..'/'..select(1, path:gsub('catrewrite/', '')), true)
 		end)
@@ -72,6 +45,9 @@ local function downloadFile(path, func)
 			res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n'..res
 		end
 		writefile(path, res)
+	end
+	if downloader then
+		downloader.Text = ''
 	end
 	return (func or readfile)(path)
 end
@@ -92,6 +68,20 @@ local function finishLoading()
 		repeat
 			pcall(function() vape:Save() end)
 			task.wait(10)
+			local suc, commit = pcall(function()
+				local _, subbed = pcall(function()
+					return game:HttpGet('https://github.com/MaxlaserTech/CatV6')
+				end)
+				local commit = subbed:find('currentOid')
+				commit = commit and subbed:sub(commit + 13, commit + 52) or nil
+				commit = commit and #commit == 40 and commit or 'main'
+				return commit
+			end)
+			if suc and commit then
+				if readfile('catrewrite/profiles/commit.txt') ~= commit then
+					vape:CreateNotification('Cat', 'Cat Vape has updated! Please re-execute the script to get the changes', 5, 'info')
+				end
+			end
 		until false
 	end))
 
@@ -121,28 +111,11 @@ local function finishLoading()
 
 	if not shared.vapereload then
 		if not vape.Categories then return end
-		--[[local body = httpService:JSONEncode({
-			nonce = httpService:GenerateGUID(false),
-			args = {
-				invite = {code = 'catvape'},
-				code = 'catvape'
-			},
-			cmd = 'INVITE_BROWSER'
-		})
-
-		for i = 1, 2 do
-			task.spawn(pcall, function()
-				request({
-					Method = 'POST',
-					Url = 'http://127.0.0.1:6463/rpc?v=1',
-					Headers = {
-						['Content-Type'] = 'application/json',
-						Origin = 'https://discord.com'
-					},
-					Body = body
-				})
-			end)
-		end]]
+		
+		if shared.maincat then
+			vape:CreateNotification('Cat', 'Your using an outdated loader of catvape, Get new one at discord.gg/catvape', 30, 'info')
+			shared.maincat = nil
+		end
 		vape:CreateNotification('Cat', 'Our last server got limited, Join our backup server discord.gg/catvape', 30, 'warning')
 		
 		if vape.Categories.Main.Options['GUI bind indicator'].Enabled then

@@ -339,8 +339,12 @@ local function createMobileButton(buttonapi, position)
 end
 
 local function downloadFile(path, func)
+	local downloader = getgenv().catdownloader
+	if downloader then
+		downloader.Text = `Downloading {path}`
+	end
 	if not isfile(path) then
-		createDownloader(path)
+		--createDownloader(path)
 		local suc, res = pcall(function()
 			return game:HttpGet('https://raw.githubusercontent.com/MaxlaserTech/CatV6/'..readfile('catrewrite/profiles/commit.txt')..'/'..select(1, path:gsub('catrewrite/', '')), true)
 		end)
@@ -351,6 +355,9 @@ local function downloadFile(path, func)
 			res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n'..res
 		end
 		writefile(path, res)
+	end
+	if downloader then
+		downloader.Text = ``
 	end
 	return (func or readfile)(path)
 end
@@ -6090,7 +6097,6 @@ function mainapi:CreateProfileGUI()
 			Refresh()
 
 			for _, v in configs do
-				print(v.metadata.username)
 				addConfig(v.metadata.config_name, v.metadata.discord_username, v.metadata)
 			end
 		end)
@@ -6780,11 +6786,18 @@ task.spawn(function()
 	loadingText.TextStrokeTransparency = 0.5
 	loadingText.FontFace = uipallet.Font
 	loadingText.Parent = clickgui
+	
+	local downloader = loadingText:Clone()
+	downloader.Parent = clickgui
+	downloader.Text = ''
+	downloader.Position = loadingText.Position + UDim2.fromScale(0, 0.05)
+	getgenv().catdownloader = downloader
 
 	repeat
 		task.wait()
 	until mainapi.Loaded
 	loadingText.Text = 'Script is fully loaded!'
+	downloader.Text = ''
 end)
 
 mainapi:Clean(gui:GetPropertyChangedSignal('AbsoluteSize'):Connect(function()
